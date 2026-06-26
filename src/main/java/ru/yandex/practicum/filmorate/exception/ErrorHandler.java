@@ -13,4 +13,13 @@ public class ErrorHandler {
     public String handleValidationException(ValidationException e) {
         return e.getMessage();
     }
+
+
+    @ExceptionHandler(NotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public String handleNotFound(NotFoundException e) {
+        return e.getMessage();
+    }
+
+
 }

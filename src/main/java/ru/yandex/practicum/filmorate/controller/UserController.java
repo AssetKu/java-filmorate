@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -33,8 +34,12 @@ public class UserController {
 
     @PutMapping
     public User update(@RequestBody User user) {
+        if (user.getId() <= 0) {
+            throw new ValidationException("Id должен быть указан");
+        }
+
         if (!users.containsKey(user.getId())) {
-            throw new ValidationException("Пользователь не найден");
+            throw new NotFoundException("Пользователь не найден");
         }
 
         validateUser(user);
@@ -51,16 +56,16 @@ public class UserController {
 
     @GetMapping
     public Collection<User> getAll() {
-        return users.values();
+        return new ArrayList<>(users.values());
     }
 
     private void validateUser(User user) {
-        if (user.getEmail() == null || !user.getEmail().contains("@")) {
+        if (user.getEmail() == null || user.getEmail().isBlank() || !user.getEmail().contains("@")) {
             log.error("Ошибка валидации email");
             throw new ValidationException("Некорректный email");
         }
 
-        if (user.getLogin() == null || user.getLogin().contains(" ")) {
+        if (user.getLogin() == null || user.getLogin().isBlank() || user.getLogin().contains(" ")) {
             log.error("Ошибка валидации login");
             throw new ValidationException("Логин не должен содержать пробелы");
         }
