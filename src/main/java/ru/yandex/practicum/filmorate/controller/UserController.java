@@ -54,6 +54,74 @@ public class UserController {
         return user;
     }
 
+    @GetMapping("/{id}")
+    public User getById(@PathVariable int id) {
+        User user = users.get(id);
+        if (user == null) {
+            throw new NotFoundException("Пользователь не найден");
+        }
+        return user;
+    }
+
+
+    @PutMapping("/{id}/friends/{friendId}")
+    public void addFriend(@PathVariable int id, @PathVariable int friendId) {
+        User user = users.get(id);
+        User friend = users.get(friendId);
+
+        if (user == null || friend == null) {
+            throw new NotFoundException("Пользователь не найден");
+        }
+
+        user.getFriends().add(friendId);
+        friend.getFriends().add(id);
+    }
+
+
+    @DeleteMapping("/{id}/friends/{friendId}")
+    public void removeFriend(@PathVariable int id, @PathVariable int friendId) {
+        User user = users.get(id);
+        User friend = users.get(friendId);
+
+        if (user == null || friend == null) {
+            throw new NotFoundException("Пользователь не найден");
+        }
+
+        user.getFriends().remove(friendId);
+        friend.getFriends().remove(id);
+    }
+
+
+    @GetMapping("/{id}/friends")
+    public List<User> getFriends(@PathVariable int id) {
+        User user = users.get(id);
+
+        if (user == null) {
+            throw new NotFoundException("Пользователь не найден");
+        }
+
+        return user.getFriends().stream()
+                .map(users::get)
+                .toList();
+    }
+
+
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public List<User> getCommonFriends(@PathVariable int id, @PathVariable int otherId) {
+        User user = users.get(id);
+        User other = users.get(otherId);
+
+        if (user == null || other == null) {
+            throw new NotFoundException("Пользователь не найден");
+        }
+
+        return user.getFriends().stream()
+                .filter(other.getFriends()::contains)
+                .map(users::get)
+                .toList();
+    }
+
+
     @GetMapping
     public Collection<User> getAll() {
         return new ArrayList<>(users.values());
