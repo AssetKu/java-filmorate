@@ -6,6 +6,7 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -102,14 +103,14 @@ public class FilmController {
 
     @PutMapping("/{id}/like/{userId}")
     public void addLike(@PathVariable int id, @PathVariable int userId) {
-        Film film = films.get(id);
-
-        if (film == null) {
-            throw new NotFoundException("Фильм не найден");
-        }
 
         if (userId <= 0) {
             throw new NotFoundException("Пользователь не найден");
+        }
+
+        Film film = films.get(id);
+        if (film == null) {
+            throw new NotFoundException("Фильм не найден");
         }
 
         film.getLikes().add(userId);
@@ -117,14 +118,13 @@ public class FilmController {
 
     @DeleteMapping("/{id}/like/{userId}")
     public void removeLike(@PathVariable int id, @PathVariable int userId) {
-        Film film = films.get(id);
-
-        if (film == null) {
-            throw new NotFoundException("Фильм не найден");
-        }
 
         if (userId <= 0) {
             throw new NotFoundException("Пользователь не найден");
+        }
+        Film film = films.get(id);
+        if (film == null) {
+            throw new NotFoundException("Фильм не найден");
         }
 
         film.getLikes().remove(userId);
