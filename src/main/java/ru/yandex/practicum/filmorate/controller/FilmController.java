@@ -73,4 +73,42 @@ public class FilmController {
             throw new ValidationException("Длительность должна быть положительной");
         }
     }
+
+    @GetMapping("/{id}")
+    public Film getById(@PathVariable int id) {
+        Film film = films.get(id);
+        if (film == null) {
+            throw new NotFoundException("Фильм не найден");
+        }
+        return film;
+    }
+
+    @GetMapping("/popular")
+    public List<Film> getPopular(@RequestParam(defaultValue = "10") int count) {
+        return films.values().stream()
+                .sorted(Comparator.comparingInt(f -> -f.getLikes().size()))
+                .limit(count)
+                .toList();
+    }
+
+
+    @PutMapping("/{id}/like/{userId}")
+    public void addLike(@PathVariable int id, @PathVariable int userId) {
+        Film film = films.get(id);
+        if (film == null) {
+            throw new NotFoundException("Фильм не найден");
+        }
+
+        film.getLikes().add(userId);
+    }
+
+    @DeleteMapping("/{id}/like/{userId}")
+    public void removeLike(@PathVariable int id, @PathVariable int userId) {
+        Film film = films.get(id);
+        if (film == null) {
+            throw new NotFoundException("Фильм не найден");
+        }
+
+        film.getLikes().remove(userId);
+    }
 }
