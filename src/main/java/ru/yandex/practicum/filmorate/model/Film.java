@@ -13,12 +13,10 @@ public class Film {
     private String description;
     private LocalDate releaseDate;
     private int duration;
+
     private Mpa mpa;
     private Set<Integer> likes = new HashSet<>();
     private Set<Genre> genres = new HashSet<>();
-
-    public Set<Integer> getLikes() {
-        return likes;
-    }
+    private Set<Director> directors = new HashSet<>();
 }
 
