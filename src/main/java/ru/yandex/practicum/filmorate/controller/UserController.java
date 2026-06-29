@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
@@ -93,7 +92,6 @@ public class UserController {
         friend.getFriends().remove(id);
     }
 
-
     @GetMapping("/{id}/friends")
     public List<User> getFriends(@PathVariable int id) {
         User user = users.get(id);
@@ -102,11 +100,8 @@ public class UserController {
             throw new NotFoundException("Пользователь не найден");
         }
 
-        return user.getFriends().stream()
-                .map(users::get)
-                .toList();
+        return user.getFriends().stream().map(users::get).toList();
     }
-
 
     @GetMapping("/{id}/friends/common/{otherId}")
     public List<User> getCommonFriends(@PathVariable int id, @PathVariable int otherId) {
@@ -117,10 +112,7 @@ public class UserController {
             throw new NotFoundException("Пользователь не найден");
         }
 
-        return user.getFriends().stream()
-                .filter(other.getFriends()::contains)
-                .map(users::get)
-                .toList();
+        return user.getFriends().stream().filter(other.getFriends()::contains).map(users::get).toList();
     }
 
     @GetMapping
@@ -139,8 +131,7 @@ public class UserController {
             throw new ValidationException("Логин не должен содержать пробелы");
         }
 
-        if (user.getBirthday() != null &&
-                user.getBirthday().isAfter(LocalDate.now())) {
+        if (user.getBirthday() != null && user.getBirthday().isAfter(LocalDate.now())) {
             log.error("Ошибка валидации birthday");
             throw new ValidationException("Дата рождения не может быть в будущем");
         }
