@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -17,9 +18,12 @@ public class FilmController {
     private final Map<Integer, Film> films = new HashMap<>();
     private int currentId = 1;
 
+
     @PostMapping
     public Film create(@RequestBody Film film) {
         validateFilm(film);
+
+        film.setMpa(getMpaById(film.getMpa().getId()));
 
         film.setId(currentId++);
         films.put(film.getId(), film);
@@ -39,6 +43,10 @@ public class FilmController {
         }
 
         validateFilm(film);
+
+        // ✅ И ЗДЕСЬ ТОЖЕ
+        film.setMpa(getMpaById(film.getMpa().getId()));
+
         films.put(film.getId(), film);
 
         log.info("Обновлен фильм: {}", film);
@@ -95,8 +103,13 @@ public class FilmController {
     @PutMapping("/{id}/like/{userId}")
     public void addLike(@PathVariable int id, @PathVariable int userId) {
         Film film = films.get(id);
+
         if (film == null) {
             throw new NotFoundException("Фильм не найден");
+        }
+
+        if (userId <= 0) {
+            throw new NotFoundException("Пользователь не найден");
         }
 
         film.getLikes().add(userId);
@@ -105,10 +118,30 @@ public class FilmController {
     @DeleteMapping("/{id}/like/{userId}")
     public void removeLike(@PathVariable int id, @PathVariable int userId) {
         Film film = films.get(id);
+
         if (film == null) {
             throw new NotFoundException("Фильм не найден");
         }
 
+        if (userId <= 0) {
+            throw new NotFoundException("Пользователь не найден");
+        }
+
         film.getLikes().remove(userId);
+    }
+
+    private static final List<Mpa> MPA_LIST = List.of(
+            new Mpa(1, "G"),
+            new Mpa(2, "PG"),
+            new Mpa(3, "PG-13"),
+            new Mpa(4, "R"),
+            new Mpa(5, "NC-17")
+    );
+
+    private Mpa getMpaById(int id) {
+        return MPA_LIST.stream()
+                .filter(m -> m.getId() == id)
+                .findFirst()
+                .orElseThrow(() -> new ValidationException("MPA не найден"));
     }
 }
