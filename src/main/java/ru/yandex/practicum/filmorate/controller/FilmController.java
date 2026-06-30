@@ -144,7 +144,7 @@ public class FilmController {
 
     private Set<Genre> getGenresByIds(Set<Genre> genres) {
         if (genres == null) {
-            return new HashSet<>();
+            return new LinkedHashSet<>();
         }
 
         return genres.stream()
@@ -152,7 +152,8 @@ public class FilmController {
                         .filter(genre -> genre.getId() == g.getId())
                         .findFirst()
                         .orElseThrow(() -> new ValidationException("Жанр не найден")))
-                .collect(Collectors.toSet());
+                .sorted(Comparator.comparingInt(Genre::getId))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     private void validateFilm(Film film) {
@@ -173,5 +174,31 @@ public class FilmController {
         if (film.getDuration() <= 0) {
             throw new ValidationException("Длительность должна быть положительной");
         }
+    }
+
+    @GetMapping("/director/{directorId}")
+    public List<Film> getFilmsByDirector(
+            @PathVariable int directorId,
+            @RequestParam String sortBy) {
+
+        List<Film> result = films.values().stream()
+                .filter(f -> f.getDirectors().stream()
+                        .anyMatch(d -> d.getId() == directorId))
+                .toList();
+
+        if ("year".equalsIgnoreCase(sortBy)) {
+            result = result.stream()
+                    .sorted(Comparator.comparing(Film::getReleaseDate))
+                    .toList();
+        } else if ("likes".equalsIgnoreCase(sortBy)) {
+            result = result.stream()
+                    .sorted(Comparator
+                            .comparingInt((Film f) -> f.getLikes().size())
+                            .reversed()
+                            .thenComparingInt(Film::getId))
+                    .toList();
+        }
+
+        return result;
     }
 }

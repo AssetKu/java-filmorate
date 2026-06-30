@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.controller;
 
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -27,9 +26,10 @@ public class UserController {
         }
 
         user.setId(currentId++);
+        user.setFriends(new HashSet<>()); // ✅ обязательно
+
         users.put(user.getId(), user);
 
-        log.info("Создан пользователь: {}", user);
         return user;
     }
 
@@ -49,9 +49,11 @@ public class UserController {
             user.setName(user.getLogin());
         }
 
+        User oldUser = users.get(user.getId());
+        user.setFriends(oldUser.getFriends());
+
         users.put(user.getId(), user);
 
-        log.info("Обновлен пользователь: {}", user);
         return user;
     }
 
@@ -63,7 +65,6 @@ public class UserController {
         }
         return user;
     }
-
 
     @PutMapping("/{id}/friends/{friendId}")
     public void addFriend(@PathVariable int id, @PathVariable int friendId) {
@@ -78,7 +79,6 @@ public class UserController {
         friend.getFriends().add(id);
     }
 
-
     @DeleteMapping("/{id}/friends/{friendId}")
     public void removeFriend(@PathVariable int id, @PathVariable int friendId) {
         User user = users.get(id);
@@ -89,7 +89,7 @@ public class UserController {
         }
 
         user.getFriends().remove(friendId);
-        friend.getFriends().remove(id);
+        friend.getFriends().remove(id); // ✅ ВАЖНО
     }
 
     @GetMapping("/{id}/friends")
@@ -100,7 +100,11 @@ public class UserController {
             throw new NotFoundException("Пользователь не найден");
         }
 
-        return user.getFriends().stream().map(users::get).toList();
+        return user.getFriends().stream()
+                .map(users::get)
+                .filter(Objects::nonNull)
+                .sorted(Comparator.comparingInt(User::getId)) // ✅ порядок важен
+                .toList();
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")
@@ -112,27 +116,29 @@ public class UserController {
             throw new NotFoundException("Пользователь не найден");
         }
 
-        return user.getFriends().stream().filter(other.getFriends()::contains).map(users::get).toList();
+        return user.getFriends().stream()
+                .filter(other.getFriends()::contains)
+                .map(users::get)
+                .filter(Objects::nonNull)
+                .sorted(Comparator.comparingInt(User::getId)) // ✅ обязательно
+                .toList();
     }
 
     @GetMapping
     public Collection<User> getAll() {
-        return new ArrayList<>(users.values());
+        return users.values();
     }
 
     private void validateUser(User user) {
         if (user.getEmail() == null || user.getEmail().isBlank() || !user.getEmail().contains("@")) {
-            log.error("Ошибка валидации email");
             throw new ValidationException("Некорректный email");
         }
 
         if (user.getLogin() == null || user.getLogin().isBlank() || user.getLogin().contains(" ")) {
-            log.error("Ошибка валидации login");
             throw new ValidationException("Логин не должен содержать пробелы");
         }
 
         if (user.getBirthday() != null && user.getBirthday().isAfter(LocalDate.now())) {
-            log.error("Ошибка валидации birthday");
             throw new ValidationException("Дата рождения не может быть в будущем");
         }
     }
