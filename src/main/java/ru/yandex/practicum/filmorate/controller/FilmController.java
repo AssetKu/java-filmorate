@@ -15,7 +15,8 @@ import java.util.stream.Collectors;
 @RequestMapping("/films")
 public class FilmController {
 
-    private final Map<Integer, Film> films = new HashMap<>();
+    private final Map<Integer, Director> directors = new HashMap<>();
+    public static final Map<Integer, Film> films = new HashMap<>();
     private int currentId = 1;
 
     @PostMapping
@@ -24,6 +25,7 @@ public class FilmController {
 
         film.setMpa(getMpaById(film.getMpa().getId()));
         film.setGenres(getGenresByIds(film.getGenres()));
+        film.setDirectors(getDirectorsByIds(film.getDirectors()));
 
         if (film.getDirectors() == null) {
             film.setDirectors(new HashSet<>());
@@ -45,12 +47,15 @@ public class FilmController {
 
         film.setMpa(getMpaById(film.getMpa().getId()));
         film.setGenres(getGenresByIds(film.getGenres()));
+        film.setDirectors(getDirectorsByIds(film.getDirectors()));
 
         if (film.getDirectors() == null) {
             film.setDirectors(new HashSet<>());
         }
 
         films.put(film.getId(), film);
+
+
 
         return film;
     }
@@ -200,5 +205,24 @@ public class FilmController {
         }
 
         return result;
+    }
+
+    private Set<Director> getDirectorsByIds(Set<Director> input) {
+        if (input == null) {
+            return new LinkedHashSet<>();
+        }
+
+        return input.stream()
+                .map(d -> getDirectorById(d.getId()))
+                .sorted(Comparator.comparingInt(Director::getId))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+    }
+
+    private Director getDirectorById(int id) {
+        Director director = directors.get(id);
+        if (director == null) {
+            throw new ValidationException("Режиссер не найден");
+        }
+        return director;
     }
 }

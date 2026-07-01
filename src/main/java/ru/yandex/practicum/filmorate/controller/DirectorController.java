@@ -58,4 +58,13 @@ public class DirectorController {
 
         return director;
     }
+
+    @DeleteMapping("/{id}")
+    public void delete(@PathVariable int id) {
+        if (!directors.containsKey(id)) {
+            throw new NotFoundException("Режиссер не найден");
+        }
+
+        directors.remove(id);
+    }
 }

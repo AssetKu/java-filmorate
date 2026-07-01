@@ -4,10 +4,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
+import static ru.yandex.practicum.filmorate.controller.FilmController.films;
 
 @Slf4j
 @RestController
@@ -26,10 +29,9 @@ public class UserController {
         }
 
         user.setId(currentId++);
-        user.setFriends(new HashSet<>()); // ✅ обязательно
+        user.setFriends(new HashSet<>());
 
         users.put(user.getId(), user);
-
         return user;
     }
 
@@ -53,7 +55,6 @@ public class UserController {
         user.setFriends(oldUser.getFriends());
 
         users.put(user.getId(), user);
-
         return user;
     }
 
@@ -76,7 +77,6 @@ public class UserController {
         }
 
         user.getFriends().add(friendId);
-        friend.getFriends().add(id);
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
@@ -89,7 +89,6 @@ public class UserController {
         }
 
         user.getFriends().remove(friendId);
-        friend.getFriends().remove(id); // ✅ ВАЖНО
     }
 
     @GetMapping("/{id}/friends")
@@ -103,7 +102,7 @@ public class UserController {
         return user.getFriends().stream()
                 .map(users::get)
                 .filter(Objects::nonNull)
-                .sorted(Comparator.comparingInt(User::getId)) // ✅ порядок важен
+                .sorted(Comparator.comparingInt(User::getId))
                 .toList();
     }
 
@@ -120,7 +119,7 @@ public class UserController {
                 .filter(other.getFriends()::contains)
                 .map(users::get)
                 .filter(Objects::nonNull)
-                .sorted(Comparator.comparingInt(User::getId)) // ✅ обязательно
+                .sorted(Comparator.comparingInt(User::getId))
                 .toList();
     }
 
@@ -141,5 +140,57 @@ public class UserController {
         if (user.getBirthday() != null && user.getBirthday().isAfter(LocalDate.now())) {
             throw new ValidationException("Дата рождения не может быть в будущем");
         }
+    }
+
+    @GetMapping("/{id}/recommendations")
+    public List<Film> getRecommendations(@PathVariable int id) {
+
+        User user = users.get(id);
+        if (user == null) {
+            throw new NotFoundException("Пользователь не найден");
+        }
+
+        Set<Integer> userLikes = films.values().stream()
+                .filter(f -> f.getLikes().contains(id))
+                .map(Film::getId)
+                .collect(Collectors.toSet());
+
+        User bestMatch = null;
+        int maxCommon = 0;
+
+        for (User other : users.values()) {
+            if (other.getId() == id) continue;
+
+            Set<Integer> otherLikes = films.values().stream()
+                    .filter(f -> f.getLikes().contains(other.getId()))
+                    .map(Film::getId)
+                    .collect(Collectors.toSet());
+
+            int common = (int) otherLikes.stream()
+                    .filter(userLikes::contains)
+                    .count();
+
+            if (common > maxCommon) {
+                maxCommon = common;
+                bestMatch = other;
+            }
+        }
+
+        if (bestMatch == null) {
+            return List.of();
+        }
+
+        User finalBestMatch = bestMatch;
+        Set<Integer> bestLikes = films.values().stream()
+                .filter(f -> f.getLikes().contains(finalBestMatch.getId()))
+                .map(Film::getId)
+                .collect(Collectors.toSet());
+
+        bestLikes.removeAll(userLikes);
+
+        return bestLikes.stream()
+                .map(films::get)
+                .filter(Objects::nonNull)
+                .toList();
     }
 }
