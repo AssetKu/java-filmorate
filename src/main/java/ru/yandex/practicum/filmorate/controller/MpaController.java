@@ -1,33 +1,29 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.service.MpaService;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/mpa")
+@RequiredArgsConstructor
 public class MpaController {
-
-    private static final List<Mpa> MPA_LIST = List.of(
-            new Mpa(1, "G"),
-            new Mpa(2, "PG"),
-            new Mpa(3, "PG-13"),
-            new Mpa(4, "R"),
-            new Mpa(5, "NC-17")
-    );
-
+    
+    private final MpaService mpaService;
+    
     @GetMapping
-    public List<Mpa> getAll() {
-        return MPA_LIST;
+    public List<Mpa> getAllMpas() {
+        return mpaService.getAllMpas();
     }
-
+    
     @GetMapping("/{id}")
-    public Mpa getById(@PathVariable int id) {
-        return MPA_LIST.stream()
-                .filter(m -> m.getId() == id)
-                .findFirst()
-                .orElseThrow(() -> new NotFoundException("MPA не найден"));
+    public Mpa getMpaById(@PathVariable Long id) {
+        return mpaService.getMpa(id);
     }
 }

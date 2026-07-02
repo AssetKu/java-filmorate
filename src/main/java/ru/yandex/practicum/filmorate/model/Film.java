@@ -1,22 +1,48 @@
 package ru.yandex.practicum.filmorate.model;
 
-import lombok.Data;
+import lombok.*;
+import ru.yandex.practicum.filmorate.annotation.AfterFirstFilm;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
-@Data
+@Setter
+@Getter
+@RequiredArgsConstructor
+@AllArgsConstructor
+@NoArgsConstructor
+@EqualsAndHashCode(of = "id")
+@ToString
 public class Film {
-    private int id;
+    
+    private Long id;
+    
+    @NonNull
+    @NotBlank(message = "Необходимо указать имя")
     private String name;
+    
+    @NonNull
+    @Size(max = 200, message = "Размер описания не должен быть больше 200 символов")
     private String description;
+    
+    @NonNull
+    @AfterFirstFilm(message = "Дата релиза не может быть раньше 28 декабря 1895 года")
     private LocalDate releaseDate;
-    private int duration;
-
+    
+    @Positive(message = "Длительность должна быть больше нуля")
+    @NotNull(message = "Duration не может быть null")
+    @NonNull
+    private Integer duration;
+    
+    @NonNull
+    private Integer rate;
+    
+    @NonNull
     private Mpa mpa;
-    private Set<Integer> likes = new HashSet<>();
-    private Set<Genre> genres = new HashSet<>();
-    private Set<Director> directors = new HashSet<>();
+    
+    private List<Genre> genres;
 }
-

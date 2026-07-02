@@ -1,196 +1,111 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.annotation.OnCreate;
+import ru.yandex.practicum.filmorate.annotation.OnUpdate;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
 
-import java.time.LocalDate;
-import java.util.*;
-import java.util.stream.Collectors;
-import static ru.yandex.practicum.filmorate.controller.FilmController.films;
+import jakarta.validation.Valid;
+import java.util.List;
 
-@Slf4j
 @RestController
 @RequestMapping("/users")
+@Slf4j
+@Validated
+@NoArgsConstructor
 public class UserController {
-
-    private final Map<Integer, User> users = new HashMap<>();
-    private int currentId = 1;
-
-    @PostMapping
-    public User create(@RequestBody User user) {
-        validateUser(user);
-
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-        }
-
-        user.setId(currentId++);
-        user.setFriends(new HashSet<>());
-
-        users.put(user.getId(), user);
+    
+    private UserService userService;
+    
+    @Autowired
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
+    
+    @GetMapping()
+    public List<User> getUsers() {
+        log.info("Возвращен список пользователей");
+        return userService.getUsers();
+    }
+    
+    @PostMapping()
+    @Validated(OnCreate.class)
+    public User createUser(@RequestBody @Valid User user) {
+        nullUserValidationCheck(user);
+        nameCorrection(user);
+        
+        userService.createUser(user);
+        log.info(String.format("Добавлен пользователь %s с id=%s.", user.getName(), user.getId()));
         return user;
     }
-
-    @PutMapping
-    public User update(@RequestBody User user) {
-        if (user.getId() <= 0) {
-            throw new ValidationException("Id должен быть указан");
-        }
-
-        if (!users.containsKey(user.getId())) {
-            throw new NotFoundException("Пользователь не найден");
-        }
-
-        validateUser(user);
-
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-        }
-
-        User oldUser = users.get(user.getId());
-        user.setFriends(oldUser.getFriends());
-
-        users.put(user.getId(), user);
+    
+    @PutMapping()
+    @Validated(OnUpdate.class)
+    public User updateUser(@RequestBody @Valid User user) {
+        nameCorrection(user);
+        
+        userService.updateUser(user);
+        log.info(String.format("Данные пользователя с id=%s обновлены.", user.getId()));
         return user;
     }
-
+    
     @GetMapping("/{id}")
-    public User getById(@PathVariable int id) {
-        User user = users.get(id);
-        if (user == null) {
-            throw new NotFoundException("Пользователь не найден");
-        }
-        return user;
+    public User getUser(@PathVariable Long id) {
+        return userService.getUser(id);
     }
-
-    @PutMapping("/{id}/friends/{friendId}")
-    public void addFriend(@PathVariable int id, @PathVariable int friendId) {
-        User user = users.get(id);
-        User friend = users.get(friendId);
-
-        if (user == null || friend == null) {
-            throw new NotFoundException("Пользователь не найден");
-        }
-
-        user.getFriends().add(friendId);
-    }
-
-    @DeleteMapping("/{id}/friends/{friendId}")
-    public void removeFriend(@PathVariable int id, @PathVariable int friendId) {
-        User user = users.get(id);
-        User friend = users.get(friendId);
-
-        if (user == null || friend == null) {
-            throw new NotFoundException("Пользователь не найден");
-        }
-
-        user.getFriends().remove(friendId);
-    }
-
-    @GetMapping("/{id}/friends")
-    public List<User> getFriends(@PathVariable int id) {
-        User user = users.get(id);
-
-        if (user == null) {
-            throw new NotFoundException("Пользователь не найден");
-        }
-
-        return user.getFriends().stream()
-                .map(users::get)
-                .filter(Objects::nonNull)
-                .sorted(Comparator.comparingInt(User::getId))
-                .toList();
-    }
-
+    
+    // Возвращает общих друзей двух пользователей
     @GetMapping("/{id}/friends/common/{otherId}")
-    public List<User> getCommonFriends(@PathVariable int id, @PathVariable int otherId) {
-        User user = users.get(id);
-        User other = users.get(otherId);
-
-        if (user == null || other == null) {
-            throw new NotFoundException("Пользователь не найден");
-        }
-
-        return user.getFriends().stream()
-                .filter(other.getFriends()::contains)
-                .map(users::get)
-                .filter(Objects::nonNull)
-                .sorted(Comparator.comparingInt(User::getId))
-                .toList();
+    public List<User> getCommonFriends(@PathVariable Long id, @PathVariable Long otherId) {
+        return userService.getCommonFriends(id, otherId);
     }
-
-    @GetMapping
-    public Collection<User> getAll() {
-        return users.values();
+    
+    // Добавляет пользователя friendId в друзья к id и наоборот
+    @PutMapping("/{id}/friends/{friendId}")
+    public ResponseEntity<Void> addFriend(@PathVariable Long id, @PathVariable Long friendId) {
+        userService.friending(id, friendId);
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
-
-    private void validateUser(User user) {
-        if (user.getEmail() == null || user.getEmail().isBlank() || !user.getEmail().contains("@")) {
-            throw new ValidationException("Некорректный email");
-        }
-
-        if (user.getLogin() == null || user.getLogin().isBlank() || user.getLogin().contains(" ")) {
-            throw new ValidationException("Логин не должен содержать пробелы");
-        }
-
-        if (user.getBirthday() != null && user.getBirthday().isAfter(LocalDate.now())) {
-            throw new ValidationException("Дата рождения не может быть в будущем");
-        }
+    
+    @DeleteMapping("/{id}/friends/{friendId}")
+    public ResponseEntity<Void> deleteFriend(@PathVariable Long id, @PathVariable Long friendId) {
+        userService.unfriending(id, friendId);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
-
-    @GetMapping("/{id}/recommendations")
-    public List<Film> getRecommendations(@PathVariable int id) {
-
-        User user = users.get(id);
+    
+    // Возвращает список друзей пользователя
+    @GetMapping("/{id}/friends")
+    public List<User> getFriends(@PathVariable Long id) {
+        return userService.getFriends(id);
+    }
+    
+    //+++++++++++++++
+    @DeleteMapping("/clear")
+    public ResponseEntity<Void> clearUserMap() {
+        log.info("Список пользователей очищен.");
+        userService.usersClear();
+        return ResponseEntity.status(HttpStatus.OK).build();
+    }
+    
+    private void nullUserValidationCheck(User user) {
         if (user == null) {
-            throw new NotFoundException("Пользователь не найден");
+            log.warn("Полученный объект user является null.");
+            throw new ValidationException("Полученный объект user является null.");
         }
-
-        Set<Integer> userLikes = films.values().stream()
-                .filter(f -> f.getLikes().contains(id))
-                .map(Film::getId)
-                .collect(Collectors.toSet());
-
-        User bestMatch = null;
-        int maxCommon = 0;
-
-        for (User other : users.values()) {
-            if (other.getId() == id) continue;
-
-            Set<Integer> otherLikes = films.values().stream()
-                    .filter(f -> f.getLikes().contains(other.getId()))
-                    .map(Film::getId)
-                    .collect(Collectors.toSet());
-
-            int common = (int) otherLikes.stream()
-                    .filter(userLikes::contains)
-                    .count();
-
-            if (common > maxCommon) {
-                maxCommon = common;
-                bestMatch = other;
-            }
+    }
+    
+    private void nameCorrection(User user) {
+        nullUserValidationCheck(user);
+        if (user.getName().isEmpty() || user.getName().isBlank()) {
+            user.setName(user.getLogin());
         }
-
-        if (bestMatch == null) {
-            return List.of();
-        }
-
-        User finalBestMatch = bestMatch;
-        Set<Integer> bestLikes = films.values().stream()
-                .filter(f -> f.getLikes().contains(finalBestMatch.getId()))
-                .map(Film::getId)
-                .collect(Collectors.toSet());
-
-        bestLikes.removeAll(userLikes);
-
-        return bestLikes.stream()
-                .map(films::get)
-                .filter(Objects::nonNull)
-                .toList();
     }
 }
