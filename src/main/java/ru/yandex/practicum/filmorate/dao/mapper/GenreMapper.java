@@ -6,6 +6,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public interface GenreMapper {
-    
+
     Genre makeGenre(ResultSet rs) throws SQLException;
 }

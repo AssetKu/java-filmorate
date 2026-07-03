@@ -22,18 +22,18 @@ import java.util.Objects;
 @RequiredArgsConstructor
 @Slf4j
 public class UserRepository implements UserDao {
-    
+
     private final JdbcTemplate jdbcTemplate;
     private final UserMapper userMapper;
-    
+
     @Override
     public Long save(User user) {
         String sqlQuery = "insert into USERS (" +
-            "USER_EMAIL, " +
-            "USER_LOGIN, " +
-            "USER_NAME, " +
-            "BIRTHDAY) " +
-            "values (?, ?, ?, ?)";
+                "USER_EMAIL, " +
+                "USER_LOGIN, " +
+                "USER_NAME, " +
+                "BIRTHDAY) " +
+                "values (?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
             PreparedStatement stmt = connection.prepareStatement(sqlQuery, new String[]{"USER_ID"});
@@ -45,7 +45,7 @@ public class UserRepository implements UserDao {
         }, keyHolder);
         return Objects.requireNonNull(keyHolder.getKey()).longValue();
     }
-    
+
     /**
      * Возвращает пользователя из базы данных по id
      *
@@ -55,79 +55,79 @@ public class UserRepository implements UserDao {
     @Override
     public User get(Long id) {
         final String sqlQuery = "select " +
-            "USER_ID, " +
-            "USER_EMAIL, " +
-            "USER_LOGIN, " +
-            "USER_NAME, " +
-            "BIRTHDAY" +
-            " from USERS " +
-            "where USER_ID = ?";
-        
+                "USER_ID, " +
+                "USER_EMAIL, " +
+                "USER_LOGIN, " +
+                "USER_NAME, " +
+                "BIRTHDAY" +
+                " from USERS " +
+                "where USER_ID = ?";
+
         return jdbcTemplate.query(sqlQuery, (rs, rowNum) -> userMapper.makeUser(rs), id)
-            .stream()
-            .findAny()
-            .orElseThrow(() -> {
-                throw new UserNotFoundException(String
-                    .format("Пользователь с id=%s не найден в базе данных.", id));
-            });
+                .stream()
+                .findAny()
+                .orElseThrow(() -> {
+                    throw new UserNotFoundException(String
+                            .format("Пользователь с id=%s не найден в базе данных.", id));
+                });
     }
-    
+
     @Override
     public void update(User user) {
         String sqlQuery = "update USERS set " +
-            "USER_NAME = ?, " +
-            "USER_LOGIN = ?, " +
-            "USER_EMAIL = ?, " +
-            "BIRTHDAY = ? " +
-            "where USER_ID = ?";
-        
+                "USER_NAME = ?, " +
+                "USER_LOGIN = ?, " +
+                "USER_EMAIL = ?, " +
+                "BIRTHDAY = ? " +
+                "where USER_ID = ?";
+
         if (isUserExist(user.getId())) {
             jdbcTemplate.update(sqlQuery,
-                user.getName(),
-                user.getLogin(),
-                user.getEmail(),
-                user.getBirthday(),
-                user.getId());
+                    user.getName(),
+                    user.getLogin(),
+                    user.getEmail(),
+                    user.getBirthday(),
+                    user.getId());
         } else {
             throw new UserNotFoundException(String
-                .format("Пользователь с id=%s не найден в базе данных.", user.getId()));
+                    .format("Пользователь с id=%s не найден в базе данных.", user.getId()));
         }
     }
-    
+
     @Override
     public void delete(Long id) {
         final String sqlQuery = String.format("delete from USERS where USER_ID = %s", id);
-        
+
         if (isUserExist(id)) {
             jdbcTemplate.execute(sqlQuery);
         } else {
             throw new UserNotFoundException(String
-                .format("Пользователь с id=%s не найден в базе данных.", id));
+                    .format("Пользователь с id=%s не найден в базе данных.", id));
         }
     }
-    
+
     @Override
     public List<User> getUsers() {
         final String sqlQuery = "select " +
-            "USER_ID, " +
-            "USER_EMAIL, " +
-            "USER_LOGIN, " +
-            "USER_NAME, " +
-            "BIRTHDAY " +
-            "from USERS";
-        
+                "USER_ID, " +
+                "USER_EMAIL, " +
+                "USER_LOGIN, " +
+                "USER_NAME, " +
+                "BIRTHDAY " +
+                "from USERS";
+
         return jdbcTemplate.query(sqlQuery, (rs, rowNum) -> userMapper.makeUser(rs));
     }
-    
+
     @Override
     public void usersClear() {
         jdbcTemplate.execute("delete from USERS");
     }
-    
+
     @Override
     public boolean isUserExist(Long id) {
         final String sqlQuery = "select * from USERS where USER_ID = ?";
-        
+
         return jdbcTemplate.query(sqlQuery, (rs, rowNum) -> userMapper.makeUser(rs), id).stream().findAny().isPresent();
     }
 }

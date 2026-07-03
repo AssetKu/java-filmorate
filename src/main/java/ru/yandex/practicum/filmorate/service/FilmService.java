@@ -14,12 +14,12 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class FilmService {
-    
+
     @NonNull
     private FilmDao filmDao;
     @NonNull
     private UserDao userDao;
-    
+
     /**
      * Добавляет фильм, полученный от {@link ru.yandex.practicum.filmorate.controller.FilmController} в {@link FilmDao}
      * Перед добавлением назначает фильму id
@@ -29,7 +29,7 @@ public class FilmService {
     public void addFilm(Film film) {
         filmDao.save(film);
     }
-    
+
     /**
      * Обновляет данные
      *
@@ -38,7 +38,7 @@ public class FilmService {
     public void updateFilm(Film film) {
         filmDao.update(film);
     }
-    
+
     /**
      * Удаляет фильм из FilmStorage по id
      *
@@ -47,7 +47,7 @@ public class FilmService {
     public void deleteFilm(Long id) {
         filmDao.delete(id);
     }
-    
+
     /**
      * Возвращает фильм по id
      *
@@ -63,7 +63,7 @@ public class FilmService {
                     .format("Фильм с id=%s не найден в базе данных.", id));
         }
     }
-    
+
     /**
      * Возвращает весь список фильмов из хранилища
      *
@@ -72,7 +72,7 @@ public class FilmService {
     public List<Film> getFilms() {
         return filmDao.getFilms();
     }
-    
+
     /**
      * Добавляет лайк к фильму
      *
@@ -81,10 +81,10 @@ public class FilmService {
      */
     public void addLikeToFilm(Long filmId, Long userId) {
         isFilmAndUserExist(filmId, userId);
-        
+
         filmDao.addLikeToFilm(filmId, userId);
     }
-    
+
     /**
      * Удаляет лайк у фильма
      *
@@ -93,10 +93,10 @@ public class FilmService {
      */
     public void removeLikeFromFilm(Long filmId, Long userId) {
         isFilmAndUserExist(filmId, userId);
-        
+
         filmDao.removeLikeFromFilm(filmId, userId);
     }
-    
+
     /**
      * Возвращает список самых рейтинговых фильмов
      *
@@ -106,20 +106,18 @@ public class FilmService {
     public List<Film> getTopRatedFilms(int listSize) {
         return filmDao.getTopRatedFilms(listSize);
     }
-    
-    
-    //++++++++++++++++
+
     private void isFilmAndUserExist(Long filmId, Long userId) {
         if (!filmDao.isFilmExist(filmId)) {
             throw new FilmNotFoundException(String
-                .format("Фильм с id=%s не найден в базе.", filmId));
+                    .format("Фильм с id=%s не найден в базе.", filmId));
         }
         if (!userDao.isUserExist(userId)) {
             throw new UserNotFoundException(String
-                .format("Пользователь с id=%s не найден в базе.", userId));
+                    .format("Пользователь с id=%s не найден в базе.", userId));
         }
     }
-    
+
     /**
      * Очищает хранилище фильмов и сбрасывает счетчик id
      */

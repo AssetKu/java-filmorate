@@ -15,31 +15,32 @@ import java.util.List;
 public class GenreRepository implements GenreDao {
     private final JdbcTemplate jdbcTemplate;
     private final GenreMapper genreMapper;
-    
+
     @Override
     public Genre getGenre(Long id) {
         String sqlQuery = "select " +
-            "GENRE_ID, " +
-            "GENRE_NAME " +
-            "from GENRES " +
-            "where GENRE_ID = ?";
-        
+                "GENRE_ID, " +
+                "GENRE_NAME " +
+                "from GENRES " +
+                "where GENRE_ID = ?";
+
         return jdbcTemplate.query(sqlQuery, (rs, rowNum) -> genreMapper.makeGenre(rs), id)
-            .stream()
-            .findAny()
-            .orElseThrow(() -> {throw new GenreNotFoundException(String
-                .format("Жанр с id=%s не найден в базе.", id));
-        });
+                .stream()
+                .findAny()
+                .orElseThrow(() -> {
+                    throw new GenreNotFoundException(String
+                            .format("Жанр с id=%s не найден в базе.", id));
+                });
     }
-    
+
     @Override
     public List<Genre> getAllGenres() {
         String sqlQuery = "select " +
-            "GENRE_ID, " +
-            "GENRE_NAME " +
-            "from GENRES " +
-            "order by GENRE_ID";
-        
+                "GENRE_ID, " +
+                "GENRE_NAME " +
+                "from GENRES " +
+                "order by GENRE_ID";
+
         return jdbcTemplate.query(sqlQuery, (rs, rowNum) -> genreMapper.makeGenre(rs));
     }
 }

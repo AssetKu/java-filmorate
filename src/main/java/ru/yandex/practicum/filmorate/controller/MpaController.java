@@ -14,14 +14,14 @@ import java.util.List;
 @RequestMapping("/mpa")
 @RequiredArgsConstructor
 public class MpaController {
-    
+
     private final MpaService mpaService;
-    
+
     @GetMapping
     public List<Mpa> getAllMpas() {
         return mpaService.getAllMpas();
     }
-    
+
     @GetMapping("/{id}")
     public Mpa getMpaById(@PathVariable Long id) {
         return mpaService.getMpa(id);

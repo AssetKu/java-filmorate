@@ -10,13 +10,13 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class GenreService {
-    
+
     private final GenreDao genreDao;
-    
+
     public Genre getGenreById(Long id) {
         return genreDao.getGenre(id);
     }
-    
+
     public List<Genre> getAllGenres() {
         return genreDao.getAllGenres();
     }

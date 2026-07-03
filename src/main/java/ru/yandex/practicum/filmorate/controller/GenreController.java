@@ -14,14 +14,14 @@ import java.util.List;
 @RequestMapping("/genres")
 @RequiredArgsConstructor
 public class GenreController {
-    
+
     private final GenreService genreService;
-    
+
     @GetMapping("/{id}")
     public Genre getGenreById(@PathVariable Long id) {
         return genreService.getGenreById(id);
     }
-    
+
     @GetMapping
     public List<Genre> getAllGenres() {
         return genreService.getAllGenres();

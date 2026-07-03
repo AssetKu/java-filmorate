@@ -10,7 +10,7 @@ import lombok.*;
 @ToString
 @EqualsAndHashCode(of = "id")
 public class Mpa {
-    
+
     @NonNull
     private Long id;
     private String name;

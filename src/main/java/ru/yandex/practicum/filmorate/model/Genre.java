@@ -9,7 +9,7 @@ import lombok.*;
 @ToString
 @EqualsAndHashCode(of = "id")
 public class Genre {
-    
+
     @NonNull
     private Long id;
     @NonNull

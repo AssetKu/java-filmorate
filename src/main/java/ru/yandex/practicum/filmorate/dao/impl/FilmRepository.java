@@ -23,15 +23,14 @@ import java.util.Objects;
 @Primary
 @RequiredArgsConstructor
 public class FilmRepository implements FilmDao {
-    
+
     private final JdbcTemplate jdbcTemplate;
     private final FilmMapper filmMapper;
     private final MpaMapper mpaMapper;
     private final GenreMapper genreMapper;
-    
+
     @Override
     public void save(Film film) {
-        // Запрос для сохранения в таблице FILMS
         String sqlQuery = "insert into FILMS (" +
                 "FILM_NAME, " +
                 "DESCRIPTION, " +
@@ -40,7 +39,7 @@ public class FilmRepository implements FilmDao {
                 "RATE, " +
                 "MPA_RATE) " +
                 "values (?, ?, ?, ?, ?, ?)";
-        
+
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
             PreparedStatement stmt = connection.prepareStatement(sqlQuery, new String[]{"FILM_ID"});
@@ -52,38 +51,34 @@ public class FilmRepository implements FilmDao {
             stmt.setLong(6, film.getMpa().getId());
             return stmt;
         }, keyHolder);
-        
+
         film.setId(Objects.requireNonNull(keyHolder.getKey()).longValue());
-        
-        // Заполняем MPA в film
+
         setMpaToFilm(film);
 
-        // Запрос для сохранения в таблице FILMGENRES
         if (film.getGenres() != null) {
             StringBuilder sqlGenreQuery = new StringBuilder("insert into FILMGENRES (FILM_ID, GENRE_ID) values");
-            
+
             for (Genre item : film.getGenres()) {
                 sqlGenreQuery.append(String.format(" ('%s', '%s'),", film.getId(), item.getId()));
             }
-            
+
             sqlGenreQuery.setCharAt(sqlGenreQuery.length() - 1, ';');
-            
+
             jdbcTemplate.update(sqlGenreQuery.toString());
         }
-        
-        // Заполняем genres в film
+
         setGenresToFilm(film);
     }
-    
+
     @Override
     public void delete(Long id) {
         String sqlQuery = "delete from FILMS where FILM_ID = ?";
         jdbcTemplate.update(sqlQuery, id);
     }
-    
+
     @Override
     public void update(Film film) {
-        // Запрос для обновления таблицы FILMS
         String sqlQuery = "update FILMS set " +
                 "FILM_NAME = ?, " +
                 "DESCRIPTION = ?, " +
@@ -91,7 +86,7 @@ public class FilmRepository implements FilmDao {
                 "DURATION = ?, " +
                 "MPA_RATE = ? " +
                 "where FILM_ID = ?";
-        
+
         if (isFilmExist(film.getId())) {
             jdbcTemplate.update(sqlQuery,
                     film.getName(),
@@ -101,38 +96,35 @@ public class FilmRepository implements FilmDao {
                     film.getMpa().getId(),
                     film.getId()
             );
-            
-            // Запрос для сохранения в таблице FILMGENRES
+
             if (film.getGenres() != null) {
                 String sqlGenreDeleteQuery = "delete from FILMGENRES where FILM_ID = ?";
                 jdbcTemplate.update(sqlGenreDeleteQuery, film.getId());
-                
+
                 if (film.getGenres().size() > 0) {
                     StringBuilder sqlGenreQuery = new StringBuilder("insert into FILMGENRES (FILM_ID, GENRE_ID) values");
-                    
+
                     for (Genre item : film.getGenres()) {
                         sqlGenreQuery.append(String.format(" ('%s', '%s'),", film.getId(), item.getId()));
                     }
-                    
+
                     sqlGenreQuery.setLength(sqlGenreQuery.length() - 1);
                     sqlGenreQuery.append(" on conflict do nothing;");
-                    
+
                     jdbcTemplate.update(sqlGenreQuery.toString());
                 }
             }
-            
-            // Заполняем MPA в film
+
             setMpaToFilm(film);
 
-            // Заполняем genres в film
             setGenresToFilm(film);
-            
+
         } else {
             throw new UserNotFoundException(String
                     .format("Пользователь с id=%s не найден в базе данных.", film.getId()));
         }
     }
-    
+
     @Override
     public Film get(Long id) {
         String sqlQuery = "select " +
@@ -144,17 +136,13 @@ public class FilmRepository implements FilmDao {
                 "MPA_RATE " +
                 "from FILMS " +
                 "where FILM_ID = ?";
-        
+
         return jdbcTemplate.query(sqlQuery, (rs, rowNum) -> filmMapper.makeFilm(rs), id)
                 .stream()
                 .findAny()
                 .orElse(null);
-            /*.orElseThrow(() -> {
-                throw new FilmNotFoundException(String
-                    .format("Фильм с id=%s не найден в базе данных.", id));
-            });*/
     }
-    
+
     @Override
     public List<Film> getFilms() {
         String sqlQuery = "select " +
@@ -166,10 +154,10 @@ public class FilmRepository implements FilmDao {
                 "RATE, " +
                 "MPA_RATE" +
                 " from FILMS f ";
-        
+
         return jdbcTemplate.query(sqlQuery, (rs, rowNum) -> filmMapper.makeFilm(rs));
     }
-    
+
     @Override
     public List<Film> getTopRatedFilms(int listSize) {
         String sqlQuery = "select " +
@@ -185,25 +173,21 @@ public class FilmRepository implements FilmDao {
                 "limit ?";
         return jdbcTemplate.query(sqlQuery, (rs, rowNum) -> filmMapper.makeFilm(rs), listSize);
     }
-    
+
     @Override
     public void addLikeToFilm(Long filmId, Long userId) {
-        // Как оказалось, RATE можно было не менять, в тестах все равно не проверяется.
         String sqlQuery = "update FILMS set RATE = (select RATE from FILMS where FILM_ID = ?) + 1 where FILM_ID = ?; " +
                 "insert into FILMLIKERS values ( ?, ? )";
         jdbcTemplate.update(sqlQuery, filmId, filmId, filmId, userId);
     }
-    
+
     @Override
     public void removeLikeFromFilm(Long filmId, Long userId) {
         String sqlQuery = "update FILMS set RATE = (select RATE from FILMS where FILM_ID = ?) - 1 where FILM_ID = ?; " +
                 "delete from FILMLIKERS where USER_ID = ?";
         jdbcTemplate.update(sqlQuery, filmId, filmId, userId);
     }
-    
-    
-    //--------------------------------------------------------------------------
-    
+
     @Override
     public void filmsClear() {
         jdbcTemplate.execute("delete from FILMLIKERS; " +
@@ -223,10 +207,10 @@ public class FilmRepository implements FilmDao {
                 "MPA_RATE " +
                 "from FILMS " +
                 "where FILM_ID = ?";
-        
+
         return jdbcTemplate.query(sqlQuery, (rs, rowNum) -> filmMapper.makeFilm(rs), id).stream().findAny().isPresent();
     }
-    
+
     private void setMpaToFilm(Film film) {
         String sqlMpaQuery = "select " +
                 "MPA_ID, " +
@@ -240,7 +224,7 @@ public class FilmRepository implements FilmDao {
                         (rs, rowNum) -> mpaMapper.makeMpa(rs),
                         film.getMpa().getId())));
     }
-    
+
     private void setGenresToFilm(Film film) {
         String sqlGenresQuery = "select " +
                 "g.GENRE_ID, " +

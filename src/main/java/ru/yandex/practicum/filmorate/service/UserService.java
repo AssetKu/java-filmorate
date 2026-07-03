@@ -14,10 +14,10 @@ import java.util.List;
 @Slf4j
 @RequiredArgsConstructor
 public class UserService {
-    
+
     private final UserDao userDao;
     private final FriendshipDao friendshipDao;
-    
+
     /**
      * Возвращает пользователя по его id
      *
@@ -27,7 +27,7 @@ public class UserService {
     public User getUser(Long id) {
         return userDao.get(id);
     }
-    
+
     /**
      * Назначает пользователю id и добавляет его в хранилище
      *
@@ -36,7 +36,7 @@ public class UserService {
     public void createUser(User user) {
         user.setId(userDao.save(user));
     }
-    
+
     /**
      * Обновляет данные пользователя
      *
@@ -45,7 +45,7 @@ public class UserService {
     public void updateUser(User user) {
         userDao.update(user);
     }
-    
+
     /**
      * Удаляет пользователя из хранилища
      *
@@ -54,7 +54,7 @@ public class UserService {
     public void deleteUser(Long id) {
         userDao.delete(id);
     }
-    
+
     /**
      * Возвращает список пользователей из хранилища
      *
@@ -63,7 +63,7 @@ public class UserService {
     public List<User> getUsers() {
         return userDao.getUsers();
     }
-    
+
     /**
      * Добавляет пользователей в друзья друг другу
      *
@@ -73,10 +73,10 @@ public class UserService {
     public void friending(Long userId, Long friendId) {
         checkUserExist(userId);
         checkUserExist(friendId);
-        
+
         friendshipDao.friending(userId, friendId);
     }
-    
+
     /**
      * Удаляет из друзей пользователей друг у друга
      *
@@ -88,10 +88,10 @@ public class UserService {
             friendshipDao.unfriending(userId, friendId);
         } else {
             throw new UserNotFoundException(String.format("Пользователей с id=%s и/или c id=%s не найдено.",
-                userId, friendId));
+                    userId, friendId));
         }
     }
-    
+
     /**
      * Возвращает список друзей пользователя
      *
@@ -100,10 +100,10 @@ public class UserService {
      */
     public List<User> getFriends(Long userId) {
         checkUserExist(userId);
-        
+
         return friendshipDao.getFriends(userId);
     }
-    
+
     /**
      * Возвращает список общих друзей у пользователей
      *
@@ -114,18 +114,16 @@ public class UserService {
     public List<User> getCommonFriends(Long firstId, Long secondId) {
         checkUserExist(firstId);
         checkUserExist(secondId);
-        
+
         return friendshipDao.getCommonFriends(firstId, secondId);
     }
-    
-    //++++++++++++++++++
-    
+
     private void checkUserExist(Long id) {
         if (!userDao.isUserExist(id)) {
             throw new UserNotFoundException(String.format("Пользователь с id=%s не найден.", id));
         }
     }
-    
+
     /**
      * Очищает хранилище пользователей и сбрасывает счетчик id
      */

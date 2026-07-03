@@ -10,13 +10,13 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class MpaService {
-    
+
     private final MpaDao mpaDao;
-    
+
     public Mpa getMpa(Long id) {
         return mpaDao.get(id);
     }
-    
+
     public List<Mpa> getAllMpas() {
         return mpaDao.getAllMpas();
     }
