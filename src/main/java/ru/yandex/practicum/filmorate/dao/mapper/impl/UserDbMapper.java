@@ -10,7 +10,7 @@ import java.time.LocalDate;
 
 @Component
 public class UserDbMapper implements UserMapper {
-    
+
     @Override
     public User makeUser(ResultSet rs) throws SQLException {
         Long id = rs.getLong("user_id");
@@ -18,7 +18,7 @@ public class UserDbMapper implements UserMapper {
         String login = rs.getString("user_login");
         String name = rs.getString("user_name");
         LocalDate birthday = rs.getDate("birthday").toLocalDate();
-        
+
         return new User(id, email, login, name, birthday);
     }
 }

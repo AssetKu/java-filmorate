@@ -9,13 +9,13 @@ import java.sql.SQLException;
 
 @Component
 public class GenreDbMapper implements GenreMapper {
-    
+
     @Override
     public Genre makeGenre(ResultSet rs) throws SQLException {
-        
+
         Long id = rs.getLong("GENRE_ID");
         String name = rs.getString("GENRE_NAME");
-        
+
         return new Genre(id, name);
     }
 }

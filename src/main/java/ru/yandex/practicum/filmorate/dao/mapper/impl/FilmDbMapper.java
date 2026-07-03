@@ -19,15 +19,14 @@ import java.util.Objects;
 @Component
 @RequiredArgsConstructor
 public class FilmDbMapper implements FilmMapper {
-    
+
     final MpaMapper mpaMapper;
     final GenreMapper genreMapper;
     final JdbcTemplate jdbcTemplate;
-    
+
     @Override
     public Film makeFilm(ResultSet rs) throws SQLException {
-        // FILM_ID, FILM_NAME, DESCRIPTION, RELEASE_DATE, DURATION, RATE, MPA_RATE
-        
+
         Long id = rs.getLong("FILM_ID");
         String name = rs.getString("FILM_NAME");
         String description = rs.getString("DESCRIPTION");
@@ -35,24 +34,24 @@ public class FilmDbMapper implements FilmMapper {
         Integer duration = rs.getInt("DURATION");
         Integer rate = rs.getInt("RATE");
         Integer mpaId = rs.getInt("MPA_RATE");
-        
+
         String sqlMpaQuery = "select " +
-            "MPA_ID, " +
-            "MPA_NAME, " +
-            "MPA_DESCRIPTION " +
-            "from MPAS " +
-            "where MPA_ID = ?";
+                "MPA_ID, " +
+                "MPA_NAME, " +
+                "MPA_DESCRIPTION " +
+                "from MPAS " +
+                "where MPA_ID = ?";
         Mpa mpaRate = Objects.requireNonNull(jdbcTemplate.queryForObject(sqlMpaQuery, (rsMpa, rowNum) -> mpaMapper.makeMpa(rsMpa), mpaId));
-        
+
         String sqlGenreQuery = "select " +
-            "g.GENRE_ID, " +
-            "g.GENRE_NAME " +
-            "from FILMGENRES f " +
-            "join GENRES g on g.GENRE_ID = f.GENRE_ID " +
-            "where FILM_ID = ? " +
-            "order by GENRE_ID";
+                "g.GENRE_ID, " +
+                "g.GENRE_NAME " +
+                "from FILMGENRES f " +
+                "join GENRES g on g.GENRE_ID = f.GENRE_ID " +
+                "where FILM_ID = ? " +
+                "order by GENRE_ID";
         List<Genre> genres = jdbcTemplate.query(sqlGenreQuery, (rsGenre, rowNum) -> genreMapper.makeGenre(rsGenre), id);
-        
+
         return new Film(id, name, description, releaseDate, duration, rate, mpaRate, genres);
     }
 }
