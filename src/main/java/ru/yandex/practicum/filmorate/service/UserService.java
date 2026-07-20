@@ -4,9 +4,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Slf4j
@@ -17,6 +19,7 @@ public class UserService {
     private final UserStorage userStorage;
 
     public User create(User user) {
+        validateUser(user);
 
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
@@ -30,6 +33,7 @@ public class UserService {
     }
 
     public User update(User user) {
+        validateUser(user);
 
         if (userStorage.getById(user.getId()) == null) {
             throw new NotFoundException("Пользователь не найден");
@@ -47,7 +51,6 @@ public class UserService {
     }
 
     public User getById(int id) {
-
         User user = userStorage.getById(id);
 
         if (user == null) {
@@ -58,12 +61,10 @@ public class UserService {
     }
 
     public List<User> getAll() {
-        log.info("Запрошен список пользователей");
         return userStorage.getAll();
     }
 
     public void addFriend(int id, int friendId) {
-
         User user = getById(id);
         User friend = getById(friendId);
 
@@ -74,7 +75,6 @@ public class UserService {
     }
 
     public void removeFriend(int id, int friendId) {
-
         User user = getById(id);
         User friend = getById(friendId);
 
@@ -85,26 +85,33 @@ public class UserService {
     }
 
     public List<User> getFriends(int id) {
-
         User user = getById(id);
-
-        log.info("Запрошен список друзей пользователя {}", id);
 
         return user.getFriends().stream()
                 .map(this::getById)
                 .toList();
     }
 
-    public List<User> getCommonFriends(int id, int otherId) {
+    private void validateUser(User user) {
 
-        User user = getById(id);
-        User otherUser = getById(otherId);
+        if (user.getEmail() == null || !user.getEmail().contains("@")) {
+            throw new ValidationException("Некорректный email");
+        }
 
-        log.info("Запрошены общие друзья пользователей {} и {}", id, otherId);
+        if (user.getLogin() == null
+                || user.getLogin().isBlank()
+                || user.getLogin().contains(" ")) {
+            throw new ValidationException(
+                    "Логин не должен содержать пробелы"
+            );
+        }
 
-        return user.getFriends().stream()
-                .filter(otherUser.getFriends()::contains)
-                .map(this::getById)
-                .toList();
+        if (user.getBirthday() != null
+                && user.getBirthday().isAfter(LocalDate.now())) {
+            throw new ValidationException(
+                    "Дата рождения не может быть в будущем"
+            );
+        }
     }
 }
+
