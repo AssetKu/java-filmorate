@@ -113,5 +113,16 @@ public class UserService {
             );
         }
     }
+
+    public List<User> getCommonFriends(int id, int otherId) {
+
+        User user = getById(id);
+        User otherUser = getById(otherId);
+
+        return user.getFriends().stream()
+                .filter(otherUser.getFriends()::contains)
+                .map(this::getById)
+                .toList();
+    }
 }
 
