@@ -1,22 +1,20 @@
 package ru.yandex.practicum.filmorate;
 
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
 
-public class UserControllerTest {
+@SpringBootTest
+class UserControllerTest {
 
+    @Autowired
     private UserController controller;
-
-    @BeforeEach
-    void setUp() {
-        controller = new UserController();
-    }
 
     @Test
     void shouldThrowIfEmailInvalid() {
@@ -24,8 +22,10 @@ public class UserControllerTest {
         user.setEmail("wrongEmail");
         user.setLogin("login");
 
-        Assertions.assertThrows(ValidationException.class,
-                () -> controller.create(user));
+        Assertions.assertThrows(
+                ValidationException.class,
+                () -> controller.create(user)
+        );
     }
 
     @Test
@@ -34,8 +34,10 @@ public class UserControllerTest {
         user.setEmail("test@test.com");
         user.setLogin("bad login");
 
-        Assertions.assertThrows(ValidationException.class,
-                () -> controller.create(user));
+        Assertions.assertThrows(
+                ValidationException.class,
+                () -> controller.create(user)
+        );
     }
 
     @Test
@@ -45,8 +47,10 @@ public class UserControllerTest {
         user.setLogin("login");
         user.setBirthday(LocalDate.now().plusDays(1));
 
-        Assertions.assertThrows(ValidationException.class,
-                () -> controller.create(user));
+        Assertions.assertThrows(
+                ValidationException.class,
+                () -> controller.create(user)
+        );
     }
 
     @Test
@@ -70,7 +74,8 @@ public class UserControllerTest {
 
         User created = controller.create(user);
 
-        Assertions.assertEquals(1, created.getId());
+        Assertions.assertNotNull(created);
+        Assertions.assertTrue(created.getId() > 0);
         Assertions.assertEquals("Name", created.getName());
     }
 }
