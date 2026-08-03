@@ -58,6 +58,7 @@ class UserControllerTest {
         User user = new User();
         user.setEmail("test@test.com");
         user.setLogin("login");
+        user.setBirthday(LocalDate.of(2000, 1, 1));
 
         User created = controller.create(user);
 
