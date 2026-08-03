@@ -83,10 +83,10 @@ public class UserDbStorage implements UserStorage {
 
         List<User> users = jdbcTemplate.query(
                 """
-                SELECT *
-                FROM USERS
-                WHERE USER_ID = ?
-                """,
+                        SELECT *
+                        FROM USERS
+                        WHERE USER_ID = ?
+                        """,
                 mapper,
                 id
         );

@@ -98,10 +98,10 @@ public class FilmDbStorage implements FilmStorage {
 
         List<Film> films = jdbcTemplate.query(
                 """
-                SELECT *
-                FROM FILMS
-                WHERE FILM_ID = ?
-                """,
+                        SELECT *
+                        FROM FILMS
+                        WHERE FILM_ID = ?
+                        """,
                 mapper,
                 id
         );
@@ -116,9 +116,9 @@ public class FilmDbStorage implements FilmStorage {
 
         return jdbcTemplate.query(
                 """
-                SELECT *
-                FROM FILMS
-                """,
+                        SELECT *
+                        FROM FILMS
+                        """,
                 mapper
         );
     }
