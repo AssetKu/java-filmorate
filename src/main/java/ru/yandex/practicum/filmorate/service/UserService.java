@@ -2,9 +2,11 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -13,10 +15,13 @@ import java.util.List;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class UserService {
 
     private final UserStorage userStorage;
+
+    public UserService(@Qualifier("userDbStorage") UserStorage userStorage) {
+        this.userStorage = userStorage;
+    }
 
     public User create(User user) {
         validateUser(user);
@@ -65,29 +70,42 @@ public class UserService {
     }
 
     public void addFriend(int id, int friendId) {
+
         User user = getById(id);
         User friend = getById(friendId);
 
-        user.getFriends().add(friendId);
-        friend.getFriends().add(id);
+        user.getFriends().put(friendId,
+                FriendshipStatus.UNCONFIRMED);
 
-        log.info("Пользователь {} добавил в друзья {}", id, friendId);
+        if (friend.getFriends().containsKey(id)) {
+            user.getFriends().put(friendId,
+                    FriendshipStatus.CONFIRMED);
+
+            friend.getFriends().put(id,
+                    FriendshipStatus.CONFIRMED);
+        }
     }
 
     public void removeFriend(int id, int friendId) {
+
         User user = getById(id);
         User friend = getById(friendId);
 
         user.getFriends().remove(friendId);
-        friend.getFriends().remove(id);
 
-        log.info("Пользователь {} удалил из друзей {}", id, friendId);
+        if (friend.getFriends().containsKey(id)) {
+            friend.getFriends().put(id,
+                    FriendshipStatus.UNCONFIRMED);
+        }
     }
 
     public List<User> getFriends(int id) {
+
         User user = getById(id);
 
-        return user.getFriends().stream()
+        return user.getFriends()
+                .keySet()
+                .stream()
                 .map(this::getById)
                 .toList();
     }
@@ -114,13 +132,16 @@ public class UserService {
         }
     }
 
-    public List<User> getCommonFriends(int id, int otherId) {
+    public List<User> getCommonFriends(int id,
+                                       int otherId) {
 
         User user = getById(id);
-        User otherUser = getById(otherId);
+        User other = getById(otherId);
 
-        return user.getFriends().stream()
-                .filter(otherUser.getFriends()::contains)
+        return user.getFriends()
+                .keySet()
+                .stream()
+                .filter(other.getFriends().keySet()::contains)
                 .map(this::getById)
                 .toList();
     }
