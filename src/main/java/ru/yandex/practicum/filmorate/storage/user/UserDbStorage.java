@@ -156,9 +156,7 @@ public class UserDbStorage implements UserStorage {
                             SELECT FRIEND_ID
                             FROM FRIENDSHIP
                             WHERE USER_ID = ?
-                            
                             INTERSECT
-                            
                             SELECT FRIEND_ID
                             FROM FRIENDSHIP
                             WHERE USER_ID = ?
