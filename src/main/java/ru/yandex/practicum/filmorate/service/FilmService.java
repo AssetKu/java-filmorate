@@ -75,27 +75,25 @@ public class FilmService {
     }
 
     public void addLike(int filmId, int userId) {
-        Film film = getById(filmId);
+
+        getById(filmId);
 
         if (userStorage.getById(userId) == null) {
             throw new NotFoundException("Пользователь не найден");
         }
 
-        film.getLikes().add(userId);
-
-        log.info("Пользователь {} поставил лайк фильму {}", userId, filmId);
+        filmStorage.addLike(filmId, userId);
     }
 
     public void removeLike(int filmId, int userId) {
-        Film film = getById(filmId);
+
+        getById(filmId);
 
         if (userStorage.getById(userId) == null) {
             throw new NotFoundException("Пользователь не найден");
         }
 
-        film.getLikes().remove(userId);
-
-        log.info("Пользователь {} удалил лайк у фильма {}", userId, filmId);
+        filmStorage.removeLike(filmId, userId);
     }
 
     public List<Film> getPopular(int count) {

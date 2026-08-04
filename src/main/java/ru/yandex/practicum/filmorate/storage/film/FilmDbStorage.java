@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.sql.Date;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -37,6 +38,10 @@ public class FilmDbStorage implements FilmStorage {
 
         film.setGenres(
                 getGenres(rs.getInt("FILM_ID"))
+        );
+
+        film.setLikes(
+                getLikes(rs.getInt("FILM_ID"))
         );
 
         return film;
@@ -200,6 +205,46 @@ public class FilmDbStorage implements FilmStorage {
                         rs.getString("MPA_NAME")
                 ),
                 mpaId
+        );
+    }
+
+    public void addLike(int filmId, int userId) {
+
+        jdbcTemplate.update(
+                """
+                        INSERT INTO FILMLIKERS (FILM_ID, USER_ID)
+                        VALUES (?, ?)
+                        """,
+                filmId,
+                userId
+        );
+    }
+
+    public void removeLike(int filmId, int userId) {
+
+        jdbcTemplate.update(
+                """
+                        DELETE FROM FILMLIKERS
+                        WHERE FILM_ID = ?
+                          AND USER_ID = ?
+                        """,
+                filmId,
+                userId
+        );
+    }
+
+    public Set<Integer> getLikes(int filmId) {
+
+        return new HashSet<>(
+                jdbcTemplate.queryForList(
+                        """
+                                SELECT USER_ID
+                                FROM FILMLIKERS
+                                WHERE FILM_ID = ?
+                                """,
+                        Integer.class,
+                        filmId
+                )
         );
     }
 }
