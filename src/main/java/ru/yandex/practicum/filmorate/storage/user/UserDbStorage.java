@@ -109,9 +109,9 @@ public class UserDbStorage implements UserStorage {
 
         jdbcTemplate.update(
                 """
-                INSERT INTO FRIENDSHIP (USER_ID, FRIEND_ID)
-                VALUES (?, ?)
-                """,
+                        INSERT INTO FRIENDSHIP (USER_ID, FRIEND_ID)
+                        VALUES (?, ?)
+                        """,
                 userId,
                 friendId
         );
@@ -121,10 +121,10 @@ public class UserDbStorage implements UserStorage {
 
         jdbcTemplate.update(
                 """
-                DELETE FROM FRIENDSHIP
-                WHERE USER_ID = ?
-                  AND FRIEND_ID = ?
-                """,
+                        DELETE FROM FRIENDSHIP
+                        WHERE USER_ID = ?
+                          AND FRIEND_ID = ?
+                        """,
                 userId,
                 friendId
         );
@@ -134,12 +134,12 @@ public class UserDbStorage implements UserStorage {
 
         return jdbcTemplate.query(
                 """
-                SELECT u.*
-                FROM USERS u
-                JOIN FRIENDSHIP f
-                  ON u.USER_ID = f.FRIEND_ID
-                WHERE f.USER_ID = ?
-                """,
+                        SELECT u.*
+                        FROM USERS u
+                        JOIN FRIENDSHIP f
+                          ON u.USER_ID = f.FRIEND_ID
+                        WHERE f.USER_ID = ?
+                        """,
                 mapper,
                 userId
         );
@@ -150,20 +150,20 @@ public class UserDbStorage implements UserStorage {
 
         return jdbcTemplate.query(
                 """
-                SELECT u.*
-                FROM USERS u
-                WHERE u.USER_ID IN (
-                    SELECT FRIEND_ID
-                    FROM FRIENDSHIP
-                    WHERE USER_ID = ?
-    
-                    INTERSECT
-    
-                    SELECT FRIEND_ID
-                    FROM FRIENDSHIP
-                    WHERE USER_ID = ?
-                )
-                """,
+                        SELECT u.*
+                        FROM USERS u
+                        WHERE u.USER_ID IN (
+                            SELECT FRIEND_ID
+                            FROM FRIENDSHIP
+                            WHERE USER_ID = ?
+                            
+                            INTERSECT
+                            
+                            SELECT FRIEND_ID
+                            FROM FRIENDSHIP
+                            WHERE USER_ID = ?
+                        )
+                        """,
                 mapper,
                 userId,
                 otherId

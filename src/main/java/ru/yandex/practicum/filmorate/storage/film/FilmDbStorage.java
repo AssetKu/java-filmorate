@@ -119,10 +119,10 @@ public class FilmDbStorage implements FilmStorage {
 
         List<Film> films = jdbcTemplate.query(
                 """
-                SELECT *
-                FROM FILMS
-                WHERE FILM_ID = ?
-                """,
+                        SELECT *
+                        FROM FILMS
+                        WHERE FILM_ID = ?
+                        """,
                 mapper,
                 id
         );
@@ -137,10 +137,10 @@ public class FilmDbStorage implements FilmStorage {
 
         return jdbcTemplate.query(
                 """
-                SELECT *
-                FROM FILMS
-                ORDER BY FILM_ID
-                """,
+                        SELECT *
+                        FROM FILMS
+                        ORDER BY FILM_ID
+                        """,
                 mapper
         );
     }
@@ -155,9 +155,9 @@ public class FilmDbStorage implements FilmStorage {
 
             jdbcTemplate.update(
                     """
-                    INSERT INTO FILMGENRES (FILM_ID, GENRE_ID)
-                    VALUES (?, ?)
-                    """,
+                            INSERT INTO FILMGENRES (FILM_ID, GENRE_ID)
+                            VALUES (?, ?)
+                            """,
                     film.getId(),
                     genre.getId()
             );
@@ -169,14 +169,14 @@ public class FilmDbStorage implements FilmStorage {
         return new LinkedHashSet<>(
                 jdbcTemplate.query(
                         """
-                        SELECT g.GENRE_ID,
-                               g.GENRE_NAME
-                        FROM FILMGENRES fg
-                        JOIN GENRES g
-                          ON fg.GENRE_ID = g.GENRE_ID
-                        WHERE fg.FILM_ID = ?
-                        ORDER BY g.GENRE_ID
-                        """,
+                                SELECT g.GENRE_ID,
+                                       g.GENRE_NAME
+                                FROM FILMGENRES fg
+                                JOIN GENRES g
+                                  ON fg.GENRE_ID = g.GENRE_ID
+                                WHERE fg.FILM_ID = ?
+                                ORDER BY g.GENRE_ID
+                                """,
                         (rs, rowNum) -> new Genre(
                                 rs.getInt("GENRE_ID"),
                                 rs.getString("GENRE_NAME")
@@ -190,11 +190,11 @@ public class FilmDbStorage implements FilmStorage {
 
         return jdbcTemplate.queryForObject(
                 """
-                SELECT MPA_ID,
-                       MPA_NAME
-                FROM MPAS
-                WHERE MPA_ID = ?
-                """,
+                        SELECT MPA_ID,
+                               MPA_NAME
+                        FROM MPAS
+                        WHERE MPA_ID = ?
+                        """,
                 (rs, rowNum) -> new Mpa(
                         rs.getInt("MPA_ID"),
                         rs.getString("MPA_NAME")
