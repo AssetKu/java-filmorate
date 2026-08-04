@@ -104,4 +104,69 @@ public class UserDbStorage implements UserStorage {
                 mapper
         );
     }
+
+    public void addFriend(int userId, int friendId) {
+
+        jdbcTemplate.update(
+                """
+                INSERT INTO FRIENDSHIP (USER_ID, FRIEND_ID)
+                VALUES (?, ?)
+                """,
+                userId,
+                friendId
+        );
+    }
+
+    public void removeFriend(int userId, int friendId) {
+
+        jdbcTemplate.update(
+                """
+                DELETE FROM FRIENDSHIP
+                WHERE USER_ID = ?
+                  AND FRIEND_ID = ?
+                """,
+                userId,
+                friendId
+        );
+    }
+
+    public List<User> getFriends(int userId) {
+
+        return jdbcTemplate.query(
+                """
+                SELECT u.*
+                FROM USERS u
+                JOIN FRIENDSHIP f
+                  ON u.USER_ID = f.FRIEND_ID
+                WHERE f.USER_ID = ?
+                """,
+                mapper,
+                userId
+        );
+    }
+
+    public List<User> getCommonFriends(int userId,
+                                       int otherId) {
+
+        return jdbcTemplate.query(
+                """
+                SELECT u.*
+                FROM USERS u
+                WHERE u.USER_ID IN (
+                    SELECT FRIEND_ID
+                    FROM FRIENDSHIP
+                    WHERE USER_ID = ?
+    
+                    INTERSECT
+    
+                    SELECT FRIEND_ID
+                    FROM FRIENDSHIP
+                    WHERE USER_ID = ?
+                )
+                """,
+                mapper,
+                userId,
+                otherId
+        );
+    }
 }

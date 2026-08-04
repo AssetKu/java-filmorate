@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -70,43 +69,29 @@ public class UserService {
 
     public void addFriend(int id, int friendId) {
 
-        User user = getById(id);
-        User friend = getById(friendId);
+        getById(id);
+        getById(friendId);
 
-        user.getFriends().put(friendId,
-                FriendshipStatus.UNCONFIRMED);
+        userStorage.addFriend(id, friendId);
 
-        if (friend.getFriends().containsKey(id)) {
-            user.getFriends().put(friendId,
-                    FriendshipStatus.CONFIRMED);
-
-            friend.getFriends().put(id,
-                    FriendshipStatus.CONFIRMED);
-        }
+        log.info("Пользователь {} добавил в друзья {}", id, friendId);
     }
 
     public void removeFriend(int id, int friendId) {
 
-        User user = getById(id);
-        User friend = getById(friendId);
+        getById(id);
+        getById(friendId);
 
-        user.getFriends().remove(friendId);
+        userStorage.removeFriend(id, friendId);
 
-        if (friend.getFriends().containsKey(id)) {
-            friend.getFriends().put(id,
-                    FriendshipStatus.UNCONFIRMED);
-        }
+        log.info("Пользователь {} удалил из друзей {}", id, friendId);
     }
 
     public List<User> getFriends(int id) {
 
-        User user = getById(id);
+        getById(id);
 
-        return user.getFriends()
-                .keySet()
-                .stream()
-                .map(this::getById)
-                .toList();
+        return userStorage.getFriends(id);
     }
 
     private void validateUser(User user) {
@@ -134,15 +119,10 @@ public class UserService {
     public List<User> getCommonFriends(int id,
                                        int otherId) {
 
-        User user = getById(id);
-        User other = getById(otherId);
+        getById(id);
+        getById(otherId);
 
-        return user.getFriends()
-                .keySet()
-                .stream()
-                .filter(other.getFriends().keySet()::contains)
-                .map(this::getById)
-                .toList();
+        return userStorage.getCommonFriends(id, otherId);
     }
 }
 
